@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FOLIO">
+<meta name="theme-color" content="#0a0a0f">
+<title>FOLIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--green:#00d4aa;--red:#ff4466;--accent:#7c6bff;--accent2:#00d4aa}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100%;overflow:hidden}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative}
+input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.header{padding:max(env(safe-area-inset-top,16px),16px) 20px 8px;display:flex;align-items:center}
+.logo{font-size:18px;font-weight:700;letter-spacing:.08em;color:var(--accent2);font-family:'JetBrains Mono',monospace}
+.content{flex:1;overflow-y:auto;padding-bottom:72px;-webkit-overflow-scrolling:touch}
+.page{animation:fadeIn .25s ease}
+
+/* Search */
+.search-wrap{margin:8px 20px 12px;display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:12px;padding:0 12px;border:1px solid var(--border)}
+.search-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;padding:12px 0;font-family:'DM Sans',sans-serif}
+.search-input::placeholder{color:var(--muted)}
+.clear-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:4px}
+
+/* List */
+.list{padding:0 12px}
+.list-header{display:flex;align-items:center;gap:8px;padding:8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.coin-row{display:flex;align-items:center;gap:10px;padding:12px 8px;cursor:pointer;border-bottom:1px solid var(--border)}
+.coin-row:active{background:var(--surface)}
+.search-row{display:flex;align-items:center;gap:10px;padding:12px 8px;border-bottom:1px solid var(--border)}
+.coin-icon{width:28px;height:28px;border-radius:14px}
+.coin-name{font-size:14px;font-weight:600;color:var(--text)}
+.coin-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.coin-symbol{font-size:12px;color:var(--muted);margin-left:6px}
+.rank{font-size:11px;color:var(--muted);margin-left:6px}
+.rank-num{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.price{font-size:13px;font-weight:500;color:var(--text);font-family:'JetBrains Mono',monospace}
+.chg{font-size:12px;font-weight:500;text-align:right}
+.add-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.add-btn:disabled{opacity:.4}
+
+/* Pagination */
+.pagination{display:flex;justify-content:center;gap:6px;padding:16px 20px;flex-wrap:wrap}
+.page-btn{background:var(--surface);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:'JetBrains Mono',monospace}
+.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Updated bar */
+.updated-bar{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.refresh-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:2px 8px;font-size:14px;cursor:pointer}
+
+/* Portfolio header */
+.portfolio-header{padding:24px 20px 20px;text-align:center}
+.portfolio-label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.portfolio-value{font-size:36px;font-weight:700;color:var(--text);letter-spacing:-.02em;font-family:'JetBrains Mono',monospace}
+.portfolio-pnl{font-size:14px;font-weight:500;margin-top:4px}
+.empty-state{text-align:center;padding:60px 20px}
+
+/* Detail */
+.back-btn{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:12px 20px;font-family:'DM Sans',sans-serif}
+.detail-header{display:flex;align-items:center;gap:12px;padding:8px 20px 16px}
+.detail-icon{width:40px;height:40px;border-radius:20px}
+.price-block{padding:0 20px 16px;display:flex;align-items:baseline;gap:12px}
+.price-big{font-size:32px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin:0 20px 20px;border-radius:12px;overflow:hidden}
+.stat{background:var(--surface);padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.stat-val{font-size:14px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace}
+
+/* PNL card */
+.pnl-card{margin:0 20px 16px;background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)}
+.pnl-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.pnl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pnl-label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+.pnl-val{display:block;font-size:14px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace}
+
+/* Transactions */
+.tx-section{margin:20px 20px 0}
+.tx-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.tx-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.tx-type{font-size:11px;font-weight:700;letter-spacing:.06em;margin-right:8px;font-family:'JetBrains Mono',monospace}
+.tx-amt{font-size:13px;color:var(--text)}
+.tx-date{font-size:11px;color:var(--muted);margin-top:2px}
+.tx-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px}
+
+/* Buttons */
+.primary-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.danger-btn{background:none;color:var(--red);border:1px solid var(--red);border-radius:12px;padding:14px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.retry-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* Form */
+.form-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.form-subtitle{font-size:14px;color:var(--muted);margin-bottom:24px}
+.toggle-group{display:flex;gap:8px;margin-bottom:24px}
+.toggle-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.toggle-btn.active-buy{background:var(--green);color:#fff;border-color:var(--green)}
+.toggle-btn.active-sell{background:var(--red);color:#fff;border-color:var(--red)}
+.form-label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;margin-top:16px}
+.form-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:16px;color:var(--text);outline:none;font-family:'JetBrains Mono',monospace}
+.total-preview{margin-top:12px;font-size:16px;font-weight:600;color:var(--accent2);font-family:'JetBrains Mono',monospace}
+
+/* Tab bar */
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:rgba(10,10,15,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0 env(safe-area-inset-bottom,8px)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500}
+.tab.active{color:var(--accent2)}
+
+/* Utility */
+.center{display:flex;justify-content:center;padding:40px}
+.spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.error-state{text-align:center;padding:48px 20px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header"><div class="logo">◇ FOLIO</div></div>
+  <div class="content" id="content"></div>
+  <div class="tab-bar" id="tabbar">
+    <button class="tab active" id="tab-market" onclick="switchView('market')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m7 16 4-8 4 4 5-9"/></svg>
+      <span>Market</span>
+    </button>
+    <button class="tab" id="tab-portfolio" onclick="switchView('portfolio')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+      <span>Portfolio</span>
+    </button>
+  </div>
+</div>
+
+<script>
+const API = 'https://api.coingecko.com/api/v3';
+const STORE = 'crypto_portfolio_v3';
+const PER = 100;
+
+// --- State ---
+let state = {
+  view: 'market',
+  coins: [],
+  loading: true,
+  error: null,
+  search: '',
+  searchResults: [],
+  searching: false,
+  page: 1,
+  lastUpdated: null,
+  selectedCoin: null,
+  txForm: { type: 'buy', amount: '', price: '', date: today() },
+  portfolio: loadPortfolio()
+};
+
+let searchTimer = null;
+let refreshTimer = null;
+
+// --- Helpers ---
+function today() { return new Date().toISOString().split('T')[0]; }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function fmt(n, d=2) {
+  if (n == null) return '—';
+  if (Math.abs(n) >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+  if (Math.abs(n) >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (Math.abs(n) < 0.01 && n !== 0) return '$' + n.toFixed(6);
+  return '$' + n.toLocaleString(undefined, {minimumFractionDigits: d, maximumFractionDigits: d});
+}
+function pct(n) { return n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(2) + '%'; }
+
+function loadPortfolio() {
+  try { const d = localStorage.getItem(STORE); return d ? JSON.parse(d) : {coins:{},transactions:{}}; }
+  catch { return {coins:{},transactions:{}}; }
+}
+function savePortfolio() { localStorage.setItem(STORE, JSON.stringify(state.portfolio)); }
+
+function sparkSVG(data, color, w=80, h=28) {
+  if (!data || data.length < 2) return '';
+  const min = Math.min(...data), max = Math.max(...data), range = max - min || 1;
+  const pts = data.map((v,i) => `${(i/(data.length-1))*w},${h-((v-min)/range)*h}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="overflow:visible"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+// --- Data ---
+async function fetchCoins(pg=1, silent=false) {
+  if (!silent) { state.loading = true; state.error = null; render(); }
+  try {
+    const r = await fetch(`${API}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${PER}&page=${pg}&sparkline=true&price_change_percentage=24h,7d`);
+    if (!r.ok) throw new Error('API returned ' + r.status);
+    const d = await r.json();
+    if (d?.status?.error_code) throw new Error(d.status.error_message || 'Rate limited');
+    if (Array.isArray(d) && d.length > 0) {
+      state.coins = d;
+      state.lastUpdated = new Date();
+      state.error = null;
+    } else throw new Error('No data returned');
+  } catch(e) {
+    console.error(e);
+    if (!silent || state.coins.length === 0) state.error = e.message;
+  }
+  state.loading = false;
+  render();
+}
+
+async function searchCoins(q) {
+  state.searching = true; render();
+  try {
+    const r = await fetch(`${API}/search?query=${encodeURIComponent(q)}`);
+    const d = await r.json();
+    state.searchResults = (d.coins || []).slice(0, 20);
+  } catch { state.searchResults = []; }
+  state.searching = false; render();
+}
+
+function startRefresh() {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (state.view === 'market' || state.view === 'portfolio') fetchCoins(state.page, true);
+  }, 60000);
+}
+
+// --- Portfolio Logic ---
+function getCoinPrice(id) { return (state.coins.find(c => c.id === id) || {}).current_price || 0; }
+function getCoinData(id) { return state.coins.find(c => c.id === id); }
+
+function calcPNL(id) {
+  const txs = state.portfolio.transactions[id] || [];
+  const price = getCoinPrice(id);
+  let qty = 0, cost = 0, realized = 0;
+  txs.forEach(tx => {
+    const a = parseFloat(tx.amount) || 0, p = parseFloat(tx.price) || 0;
+    if (tx.type === 'buy') { qty += a; cost += a * p; }
+    else { realized += a * (p - (cost / qty || 0)); cost -= a * (cost / qty || 0); qty -= a; }
+  });
+  qty = Math.max(0, qty);
+  const mv = qty * price, unrealized = mv - cost, avg = qty > 0 ? cost / qty : 0;
+  return { qty, cost, mv, unrealized, realized, avg, total: unrealized + realized };
+}
+
+function addToPortfolio(coin) {
+  state.portfolio.coins[coin.id] = { id: coin.id, symbol: coin.symbol, name: coin.name, thumb: coin.thumb || coin.image || coin.large };
+  state.portfolio.transactions[coin.id] = state.portfolio.transactions[coin.id] || [];
+  savePortfolio(); render();
+}
+function removeFromPortfolio(id) {
+  delete state.portfolio.coins[id]; delete state.portfolio.transactions[id];
+  savePortfolio(); render();
+}
+function addTx(id, tx) {
+  state.portfolio.transactions[id] = [...(state.portfolio.transactions[id]||[]), {...tx, id: uid()}];
+  savePortfolio();
+}
+function deleteTx(coinId, txId) {
+  state.portfolio.transactions[coinId] = (state.portfolio.transactions[coinId]||[]).filter(t => t.id !== txId);
+  savePortfolio(); render();
+}
+
+// --- Views ---
+function switchView(v) {
+  state.view = v;
+  state.search = '';
+  state.searchResults = [];
+  render();
+}
+
+function renderMarket() {
+  const inP = id => !!state.portfolio.coins[id];
+  let html = `<div class="page">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="search-input" placeholder="Search any cryptocurrency..." id="searchInput" value="${esc(state.search)}" oninput="onSearch(this.value)">
+      ${state.search ? '<button class="clear-btn" onclick="clearSearch()">✕</button>' : ''}
+    </div>`;
+
+  if (state.search.trim()) {
+    html += '<div class="list">';
+    if (state.searching) html += '<div class="center"><span class="spinner"></span></div>';
+    state.searchResults.forEach(c => {
+      const added = inP(c.id);
+      html += `<div class="search-row">
+        <img src="${c.thumb}" class="coin-icon" onerror="this.style.display='none'">
+        <div style="flex:1"><span class="coin-name">${esc(c.name)}</span><span class="coin-symbol">${esc((c.symbol||'').toUpperCase())}</span>${c.market_cap_rank ? `<span class="rank">#${c.market_cap_rank}</span>` : ''}</div>
+        <button class="add-btn" ${added ? 'disabled' : ''} onclick='${added ? '' : `addToPortfolio(${JSON.stringify({id:c.id,symbol:c.symbol,name:c.name,thumb:c.thumb})})`}'>${added ? 'Added' : '+ Add'}</button>
+      </div>`;
+    });
+    if (!state.searching && state.searchResults.length === 0) html += '<div class="empty">No results found</div>';
+    html += '</div>';
+  } else {
+    html += `<div class="list">
+      <div class="list-header"><span style="width:36px">#</span><span style="flex:1">Name</span><span style="width:90px;text-align:right">Price</span><span style="width:64px;text-align:right">24h</span><span style="width:80px;text-align:right">7d</span></div>`;
+
+    if (state.loading && state.coins.length === 0) {
+      html += '<div class="center"><span class="spinner"></span></div>';
+    } else if (state.error && state.coins.length === 0) {
+      const msg = (state.error.includes('Failed to fetch') || state.error.includes('NetworkError'))
+        ? 'Check your internet connection and try again.' : esc(state.error);
+      html += `<div class="error-state">
+        <div style="font-size:32px;margin-bottom:12px">⚡</div>
+        <div style="font-size:15px;color:var(--text);margin-bottom:6px;font-weight:600">Unable to load market data</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">${msg}</div>
+        <button class="retry-btn" onclick="fetchCoins(state.page)">Retry</button>
+      </div>`;
+    } else {
+      if (state.lastUpdated) {
+        html += `<div class="updated-bar"><span>Updated ${state.lastUpdated.toLocaleTimeString()}</span><button class="refresh-btn" onclick="fetchCoins(state.page)">↻</button></div>`;
+      }
+      state.coins.forEach(c => {
+        const chg = c.price_change_percentage_24h;
+        const chg7 = c.price_change_percentage_7d_in_currency;
+        const col = chg >= 0 ? 'var(--green)' : 'var(--red)';
+        html += `<div class="coin-row" onclick='openDetail(${JSON.stringify(c.id)})'>
+          <span class="rank-num" style="width:36px">${c.market_cap_rank}</span>
+          <img src="${c.image}" class="coin-icon" onerror="this.style.display='none'">
+          <div style="flex:1;min-width:0"><div class="coin-name">${esc((c.symbol||'').toUpperCase())}</div><div class="coin-sub">${esc(c.name)}</div></div>
+          <div style="width:90px;text-align:right"><div class="price">${fmt(c.current_price)}</div></div>
+          <div class="chg" style="width:64px;color:${col}">${pct(chg)}</div>
+          <div style="width:80px;text-align:right">${sparkSVG(c.sparkline_in_7d?.price, chg7 >= 0 ? 'var(--green)' : 'var(--red)')}</div>
+        </div>`;
+      });
+    }
+    html += '</div>';
+    html += '<div class="pagination">';
+    for (let i = 0; i < 5; i++) {
+      html += `<button class="page-btn${state.page===i+1?' active':''}" onclick="goPage(${i+1})">${i*PER+1}–${(i+1)*PER}</button>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderPortfolio() {
+  const ids = Object.keys(state.portfolio.coins);
+  let totalVal = 0, totalPnl = 0;
+  ids.forEach(id => { const p = calcPNL(id); totalVal += p.mv; totalPnl += p.total; });
+
+  let html = `<div class="page">
+    <div class="portfolio-header">
+      <div class="portfolio-label">Portfolio Value</div>
+      <div class="portfolio-value">${fmt(totalVal)}</div>
+      <div class="portfolio-pnl" style="color:${totalPnl>=0?'var(--green)':'var(--red)'}">${totalPnl>=0?'▲':'▼'} ${fmt(Math.abs(totalPnl))} total P&L</div>
+    </div>`;
+
+  if (ids.length === 0) {
+    html += `<div class="empty-state">
+      <div style="font-size:40px;margin-bottom:12px">◇</div>
+      <div style="font-size:15px;color:var(--muted);margin-bottom:16px">Your portfolio is empty</div>
+      <button class="primary-btn" onclick="switchView('market')">Browse Market</button>
+    </div>`;
+  } else {
+    html += '<div class="list">';
+    ids.forEach(id => {
+      const c = state.portfolio.coins[id];
+      const pnl = calcPNL(id);
+      html += `<div class="coin-row" onclick='openDetail("${id}")'>
+        <img src="${c.thumb||c.image||''}" class="coin-icon" onerror="this.style.display='none'">
+        <div style="flex:1;min-width:0"><div class="coin-name">${esc((c.symbol||'').toUpperCase())}</div><div class="coin-sub">${pnl.qty.toFixed(4)} @ ${fmt(pnl.avg)}</div></div>
+        <div style="text-align:right"><div class="price">${fmt(pnl.mv)}</div><div style="font-size:12px;color:${pnl.total>=0?'var(--green)':'var(--red)'};font-weight:500">${pnl.total>=0?'+':''}${fmt(pnl.total)}</div></div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderDetail() {
+  const coin = state.selectedCoin;
+  if (!coin) return '';
+  const inP = !!state.portfolio.coins[coin.id];
+  const pnl = inP ? calcPNL(coin.id) : null;
+  const txs = (state.portfolio.transactions[coin.id] || []).sort((a,b) => new Date(b.date) - new Date(a.date));
+  const chg = coin.price_change_percentage_24h;
+
+  let html = `<div class="page">
+    <button class="back-btn" onclick="switchView('${inP?'portfolio':'market'}')">← Back</button>
+    <div class="detail-header">
+      <img src="${coin.image||coin.thumb||''}" class="detail-icon" onerror="this.style.display='none'">
+      <div><div style="font-size:20px;font-weight:600;color:var(--text)">${esc(coin.name)}</div><div style="font-size:13px;color:var(--muted)">${esc((coin.symbol||'').toUpperCase())}</div></div>
+    </div>
+    <div class="price-block">
+      <div class="price-big">${fmt(coin.current_price)}</div>
+      ${chg!=null?`<span style="font-size:14px;color:${chg>=0?'var(--green)':'var(--red)'};font-weight:500">${pct(chg)} (24h)</span>`:''}
+    </div>`;
+
+  if (coin.sparkline_in_7d?.price) {
+    html += `<div style="padding:0 20px 20px">${sparkSVG(coin.sparkline_in_7d.price, chg>=0?'var(--green)':'var(--red)', 320, 80)}</div>`;
+  }
+
+  html += `<div class="stats-grid">
+    <div class="stat"><div class="stat-label">Market Cap</div><div class="stat-val">${fmt(coin.market_cap,0)}</div></div>
+    <div class="stat"><div class="stat-label">Volume (24h)</div><div class="stat-val">${fmt(coin.total_volume,0)}</div></div>
+    <div class="stat"><div class="stat-label">High (24h)</div><div class="stat-val">${fmt(coin.high_24h)}</div></div>
+    <div class="stat"><div class="stat-label">Low (24h)</div><div class="stat-val">${fmt(coin.low_24h)}</div></div>
+    <div class="stat"><div class="stat-label">ATH</div><div class="stat-val">${fmt(coin.ath)}</div></div>
+    <div class="stat"><div class="stat-label">Circulating</div><div class="stat-val">${coin.circulating_supply ? (coin.circulating_supply/1e6).toFixed(1)+'M' : '—'}</div></div>
+  </div>`;
+
+  if (!inP) {
+    html += `<div style="padding:0 20px"><button class="primary-btn" onclick='addToPortfolio(${JSON.stringify({id:coin.id,symbol:coin.symbol,name:coin.name,thumb:coin.image})})'>+ Add to Portfolio</button></div>`;
+  } else {
+    if (pnl) {
+      html += `<div class="pnl-card"><div class="pnl-title">Your Position</div><div class="pnl-grid">
+        <div><span class="pnl-label">Holdings</span><span class="pnl-val">${pnl.qty.toFixed(6)}</span></div>
+        <div><span class="pnl-label">Value</span><span class="pnl-val">${fmt(pnl.mv)}</span></div>
+        <div><span class="pnl-label">Avg Cost</span><span class="pnl-val">${fmt(pnl.avg)}</span></div>
+        <div><span class="pnl-label">Total P&L</span><span class="pnl-val" style="color:${pnl.total>=0?'var(--green)':'var(--red)'}">${fmt(pnl.total)}</span></div>
+      </div></div>`;
+    }
+    html += `<div style="padding:0 20px;display:flex;gap:8px">
+      <button class="primary-btn" style="flex:1" onclick="openAddTx()">+ Add Transaction</button>
+      <button class="danger-btn" onclick="removeCoin('${coin.id}')">Remove</button>
+    </div>`;
+
+    if (txs.length > 0) {
+      html += '<div class="tx-section"><div class="tx-title">Transactions</div>';
+      txs.forEach(tx => {
+        html += `<div class="tx-row">
+          <div style="flex:1">
+            <span class="tx-type" style="color:${tx.type==='buy'?'var(--green)':'var(--red)'}">${tx.type==='buy'?'BUY':'SELL'}</span>
+            <span class="tx-amt">${parseFloat(tx.amount).toFixed(4)} @ ${fmt(parseFloat(tx.price))}</span>
+            <div class="tx-date">${tx.date}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${fmt(parseFloat(tx.amount)*parseFloat(tx.price))}</div>
+            <button class="tx-del" onclick="event.stopPropagation();deleteTx('${coin.id}','${tx.id}')">✕</button>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderAddTx() {
+  const coin = state.selectedCoin;
+  if (!coin) return '';
+  const f = state.txForm;
+  const total = (parseFloat(f.amount)||0) * (parseFloat(f.price)||0);
+
+  return `<div class="page">
+    <button class="back-btn" onclick="state.view='detail';render()">← Back</button>
+    <div style="padding:0 20px">
+      <h2 class="form-title">Add Transaction</h2>
+      <div class="form-subtitle">${esc(coin.name)} (${esc((coin.symbol||'').toUpperCase())})</div>
+      <div class="toggle-group">
+        <button class="toggle-btn ${f.type==='buy'?'active-buy':''}" onclick="state.txForm.type='buy';render()">Buy</button>
+        <button class="toggle-btn ${f.type==='sell'?'active-sell':''}" onclick="state.txForm.type='sell';render()">Sell</button>
+      </div>
+      <label class="form-label">Amount</label>
+      <input class="form-input" type="number" placeholder="0.00" id="txAmount" value="${esc(f.amount)}" oninput="state.txForm.amount=this.value;updateTotal()">
+      <label class="form-label">Price per coin (USD)</label>
+      <input class="form-input" type="number" placeholder="0.00" id="txPrice" value="${esc(f.price)}" oninput="state.txForm.price=this.value;updateTotal()">
+      <div class="total-preview" id="totalPreview">${total > 0 ? 'Total: '+fmt(total) : ''}</div>
+      <label class="form-label">Date</label>
+      <input class="form-input" type="date" value="${f.date}" oninput="state.txForm.date=this.value">
+      <button class="primary-btn" style="margin-top:24px" onclick="confirmTx()">Confirm Transaction</button>
+    </div>
+  </div>`;
+}
+
+// --- Actions ---
+function openDetail(id) {
+  const coin = state.coins.find(c => c.id === id);
+  if (coin) { state.selectedCoin = coin; }
+  else {
+    const pc = state.portfolio.coins[id];
+    if (pc) state.selectedCoin = { id, ...pc, image: pc.thumb };
+  }
+  state.view = 'detail'; render();
+}
+
+function openAddTx() {
+  const coin = state.selectedCoin;
+  state.txForm = { type: 'buy', amount: '', price: coin?.current_price?.toString() || '', date: today() };
+  state.view = 'addTx'; render();
+}
+
+function confirmTx() {
+  if (!state.txForm.amount || !state.txForm.price) return;
+  addTx(state.selectedCoin.id, state.txForm);
+  state.view = 'detail'; render();
+}
+
+function removeCoin(id) {
+  removeFromPortfolio(id);
+  state.view = 'portfolio'; render();
+}
+
+function updateTotal() {
+  const t = (parseFloat(state.txForm.amount)||0) * (parseFloat(state.txForm.price)||0);
+  const el = document.getElementById('totalPreview');
+  if (el) el.textContent = t > 0 ? 'Total: '+fmt(t) : '';
+}
+
+function onSearch(v) {
+  state.search = v;
+  clearTimeout(searchTimer);
+  if (!v.trim()) { state.searchResults = []; render(); return; }
+  searchTimer = setTimeout(() => searchCoins(v), 400);
+  render();
+}
+function clearSearch() { state.search = ''; state.searchResults = []; render(); }
+
+function goPage(p) { state.page = p; fetchCoins(p); }
+
+// --- Render ---
+function render() {
+  const el = document.getElementById('content');
+  const tb = document.getElementById('tabbar');
+
+  if (state.view === 'market') el.innerHTML = renderMarket();
+  else if (state.view === 'portfolio') el.innerHTML = renderPortfolio();
+  else if (state.view === 'detail') el.innerHTML = renderDetail();
+  else if (state.view === 'addTx') el.innerHTML = renderAddTx();
+
+  // Tab bar visibility
+  tb.style.display = (state.view === 'market' || state.view === 'portfolio') ? 'flex' : 'none';
+
+  // Tab active states
+  const tm = document.getElementById('tab-market');
+  const tp = document.getElementById('tab-portfolio');
+  if (tm) tm.className = 'tab' + (state.view === 'market' ? ' active' : '');
+  if (tp) tp.className = 'tab' + (state.view === 'portfolio' ? ' active' : '');
+
+  // Restore focus on search if needed
+  if (state.view === 'market' && state.search) {
+    const si = document.getElementById('searchInput');
+    if (si) { si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
+  }
+}
+
+// --- Init ---
+fetchCoins(1);
+startRefresh();
+</script>
+</body>
+</html>
